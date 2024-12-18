@@ -4,6 +4,10 @@ export type TBlindBoxData = {
   id: string;
   url: string;
   bg?: string;
+  color?: string;
+  secretBoxData: {
+    number: number;
+  };
 };
 
 export type TActiveBlindBoxData = {
