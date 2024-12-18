@@ -1,4 +1,11 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { css } from "@emotion/react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { useBlindBox } from "../context/hooks";
@@ -10,6 +17,7 @@ const Card: React.FC<{
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const [rotation, setRotation] = useState({ x: 0, y: 0 });
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
 
   const { getDataById, openedBoxes } = useBlindBox();
@@ -18,6 +26,28 @@ const Card: React.FC<{
     () => openedBoxes.includes(boxId),
     [openedBoxes, boxId]
   );
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      const card = e.currentTarget;
+      const rect = card.getBoundingClientRect();
+
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const rotateX = ((y - centerY) / centerY) * 50;
+      const rotateY = ((x - centerX) / centerX) * -30;
+
+      setRotation({ x: rotateX, y: rotateY });
+    },
+    [setRotation]
+  );
+
+  const handleMouseLeave = useCallback(() => {
+    setRotation({ x: 0, y: 0 });
+  }, [setRotation]);
 
   useGSAP(
     () => {
@@ -53,13 +83,28 @@ const Card: React.FC<{
   return (
     <div
       ref={containerRef}
-      className="bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className="rounded-lg shadow-2xl overflow-hidden"
       style={{
         cursor: isOpened ? "none" : "pointer",
         userSelect: "none",
         pointerEvents: isOpened ? "none" : "all",
         backgroundColor: data.bg,
       }}
+      data-lg-hover
+      css={css`
+        transform-style: preserve-3d;
+        perspective: 1000px;
+        transition: all 0.3s ease;
+
+        &:hover {
+          transform: rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)
+            scale(1.1);
+          z-index: 1;
+          box-shadow: #2d2d2d 0px 0px 30px 4px;
+        }
+      `}
     >
       {isOpened ? (
         <>

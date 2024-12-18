@@ -124,7 +124,7 @@ const CenterCard: React.FC<{ onClose: (id: string) => void }> = ({
     <div
       ref={ref}
       key={openingBox.id}
-      className="bg-white rounded-lg shadow-lg overflow-hidden absolute"
+      className="z-50 bg-white rounded-lg shadow-lg overflow-hidden absolute"
       style={{
         width: openingBox.width,
         height: openingBox.height,
