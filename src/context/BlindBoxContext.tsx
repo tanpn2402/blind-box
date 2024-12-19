@@ -6,7 +6,8 @@ export type TBlindBoxData = {
   bg?: string;
   color?: string;
   secretBoxData: {
-    number: number;
+    name?: string;
+    url?: string;
   };
 };
 

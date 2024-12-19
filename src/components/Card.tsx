@@ -9,7 +9,6 @@ import { css } from "@emotion/react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { useBlindBox } from "../context/hooks";
-import { getImageSvgSmallUrl } from "../utils/getImageSvgUrl";
 
 const Card: React.FC<{
   boxId: string;
@@ -37,8 +36,8 @@ const Card: React.FC<{
 
       const centerX = rect.width / 2;
       const centerY = rect.height / 2;
-      const rotateX = ((y - centerY) / centerY) * 50;
-      const rotateY = ((x - centerX) / centerX) * -30;
+      const rotateX = ((y - centerY) / centerY) * 10;
+      const rotateY = ((x - centerX) / centerX) * -8;
 
       setRotation({ x: rotateX, y: rotateY });
     },
@@ -223,12 +222,7 @@ const Card: React.FC<{
                 filter={`url(#distort_${boxId})`}
                 width="100%"
                 height="100%"
-                xlinkHref={getImageSvgSmallUrl(
-                  data.secretBoxData.number,
-                  data.color,
-                  containerSize.width,
-                  containerSize.height
-                )}
+                xlinkHref={data.secretBoxData.url}
                 style={{
                   objectFit: "scale-down",
                 }}

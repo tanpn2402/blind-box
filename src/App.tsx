@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { css } from "@emotion/react";
 import {
   BlindBoxContext,
   BlindBoxStatus,
@@ -6,10 +7,10 @@ import {
   TBlindBoxData,
 } from "./context/BlindBoxContext";
 import { shuffle } from "lodash";
-import data from "./data.json";
 import { Card } from "./components/Card";
 import { CenterCard } from "./components/CenterCard";
-import { css } from "@emotion/react";
+import { useQuery } from "@tanstack/react-query";
+import { fetchJsonData } from "./services/api";
 
 function App() {
   const [openingBox, setOpeningBox] = useState<TActiveBlindBoxData>();
@@ -25,37 +26,58 @@ function App() {
     })()
   );
 
-  const { boxNumber, secretBoxNumber } = useMemo(() => {
-    const boxNumber = Array(35)
-      .fill(true)
-      .map((_, index) => index);
-
-    let secretBoxNumber: number[] = [];
-    const secretBox = localStorage.getItem("SECRET_BOX");
-    if (secretBox) {
-      secretBoxNumber = JSON.parse(secretBox);
-    } else {
-      secretBoxNumber = shuffle(boxNumber);
-      localStorage.setItem("SECRET_BOX", JSON.stringify(secretBoxNumber));
-    }
-
-    return { boxNumber, secretBoxNumber };
-  }, []);
-
-  const boxes = useMemo<TBlindBoxData[]>(() => {
-    return boxNumber.map((index) => {
-      return {
-        ...data[index],
-        secretBoxData: {
-          number: secretBoxNumber[index] + 1,
-        },
-      };
-    });
-  }, [boxNumber, secretBoxNumber]);
+  const { data: boxes, isLoading } = useQuery<Array<TBlindBoxData>>({
+    queryKey: ["BOX_DATA"],
+    queryFn: async () => {
+      const [boxFetching, giftFetching] = await Promise.allSettled([
+        fetchJsonData<Array<Omit<TBlindBoxData, "secretBoxData">>>(
+          "https://vdkleuqyjgpilnwyvual.supabase.co/storage/v1/object/public/images/box.json"
+        ),
+        fetchJsonData<Array<TBlindBoxData["secretBoxData"]>>(
+          "https://vdkleuqyjgpilnwyvual.supabase.co/storage/v1/object/public/images/gift.json"
+        ),
+      ]);
+      let boxData: Array<Omit<TBlindBoxData, "secretBoxData">> | undefined =
+          undefined,
+        giftData: Array<TBlindBoxData["secretBoxData"]> | undefined = undefined;
+      if (boxFetching.status === "fulfilled") {
+        boxData = boxFetching.value.data;
+      }
+      if (giftFetching.status === "fulfilled") {
+        giftData = giftFetching.value.data;
+      }
+      if (boxData && giftData) {
+        const boxNumber = Array(35)
+          .fill(true)
+          .map((_, index) => index);
+        let secretBoxNumber: Array<TBlindBoxData["secretBoxData"]> = [];
+        const secretBox = localStorage.getItem("SECRET_BOX");
+        if (secretBox) {
+          secretBoxNumber = JSON.parse(secretBox);
+        } else {
+          secretBoxNumber = shuffle(giftData);
+          localStorage.setItem("SECRET_BOX", JSON.stringify(secretBoxNumber));
+        }
+        return boxNumber.map((index) => {
+          return {
+            ...boxData[index],
+            secretBoxData: {
+              name: secretBoxNumber[index].name,
+              url: secretBoxNumber[index].url,
+            },
+          };
+        });
+      }
+      return [];
+    },
+    retry: 0,
+    refetchOnWindowFocus: false,
+    staleTime: 0,
+  });
 
   const getDataById = useCallback(
     (id: string) => {
-      return boxes.find((el) => el.id === id);
+      return (boxes ?? []).find((el) => el.id === id);
     },
     [boxes]
   );
@@ -150,11 +172,17 @@ function App() {
             ></button>
           </div>
         </div>
-        <div className="w-full h-full flex-1 grid grid-cols-7 grid-rows-5 gap-2 p-2 overflow-hidden cursor-pointer">
-          {boxes.map((box) => {
-            return <Card key={box.id} boxId={box.id} />;
-          })}
-        </div>
+        {isLoading ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="w-10 h-10 border-4 border-green-500 border-dotted rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <div className="w-full h-full flex-1 grid grid-cols-7 grid-rows-5 gap-2 p-2 overflow-hidden cursor-pointer">
+            {(boxes ?? []).map((box) => {
+              return <Card key={box.id} boxId={box.id} />;
+            })}
+          </div>
+        )}
         <CenterCard onClose={handleBoxClosed} />
       </div>
     </BlindBoxContext.Provider>

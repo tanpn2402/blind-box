@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { css } from "@emotion/react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import { getImageSvgUrl } from "../utils/getImageSvgUrl";
 import { useBlindBox } from "../context/hooks";
 
 const CenterCard: React.FC<{ onClose: (id: string) => void }> = ({
@@ -38,16 +37,11 @@ const CenterCard: React.FC<{ onClose: (id: string) => void }> = ({
       return "/images/" + data?.url;
     }
     if (state === "REVEAL" && data) {
-      return getImageSvgUrl(
-        data.secretBoxData.number,
-        data.color,
-        boxData?.width,
-        boxData?.height
-      );
+      return data.secretBoxData.url;
     } else {
       return undefined;
     }
-  }, [data, boxData, state]);
+  }, [data, state]);
 
   useEffect(() => {
     if (ref.current && boxData) {
