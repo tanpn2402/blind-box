@@ -19,7 +19,7 @@ const Card: React.FC<{
   const [rotation, setRotation] = useState({ x: 0, y: 0 });
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
 
-  const { getDataById, openedBoxes } = useBlindBox();
+  const { getDataById, openedBoxes, status } = useBlindBox();
   const data = useMemo(() => getDataById(boxId), [getDataById, boxId]);
   const isOpened = useMemo(
     () => openedBoxes.includes(boxId),
@@ -82,8 +82,8 @@ const Card: React.FC<{
   return (
     <div
       ref={containerRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
+      onMouseMove={status === "NONE" ? handleMouseMove : undefined}
+      onMouseLeave={status === "NONE" ? handleMouseLeave : undefined}
       className="rounded-lg shadow-2xl overflow-hidden"
       style={{
         cursor: isOpened ? "none" : "pointer",
@@ -98,10 +98,13 @@ const Card: React.FC<{
         transition: all 0.3s ease;
 
         &:hover {
-          transform: rotateX(${rotation.x}deg) rotateY(${rotation.y}deg)
-            scale(1.1);
+          transform: ${status === "NONE"
+            ? `rotateX(${rotation.x}deg) rotateY(${rotation.y}deg) scale(1.1)`
+            : "none"};
           z-index: 1;
-          box-shadow: #2d2d2d 0px 0px 30px 4px;
+          box-shadow: ${status === "NONE"
+            ? "#2d2d2d 0px 0px 30px 4px;"
+            : "none"};
         }
       `}
     >
@@ -120,9 +123,9 @@ const Card: React.FC<{
               <defs>
                 <filter id={`distort_${boxId}`}>
                   <feFlood
-                    x="5%"
+                    x="10%"
                     y="5%"
-                    width="90%"
+                    width="80%"
                     height="90%"
                     floodColor="green"
                     result="shark0"
@@ -216,15 +219,22 @@ const Card: React.FC<{
                   <feDisplacementMap in2="gaa" in="final" scale="20" />
                 </filter>
               </defs>
-              <image
-                x="0"
-                y="0"
-                filter={`url(#distort_${boxId})`}
+              <rect
                 width="100%"
                 height="100%"
+                fill={"#FFF"}
+                filter={`url(#distort_${boxId})`}
+              />
+              <image
+                x="10%"
+                y="10%"
+                width="80%"
+                height="80%"
+                filter={`url(#distort_${boxId})`}
                 xlinkHref={data.secretBoxData.url}
                 style={{
                   objectFit: "scale-down",
+                  backgroundColor: data.bg,
                 }}
               />
             </svg>

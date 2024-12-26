@@ -32,12 +32,45 @@ const CenterCard: React.FC<{ onClose: (id: string) => void }> = ({
     [getDataById, openingBox]
   );
 
-  const imgUrl = useMemo(() => {
+  const imageTag = useMemo(() => {
     if (state === "READY") {
-      return "/images/" + data?.url;
+      return (
+        <image
+          x="0"
+          y="0"
+          filter="url(#distort)"
+          width="100%"
+          height="100%"
+          xlinkHref={"/images/" + data?.url}
+          style={{
+            objectFit: "scale-down",
+          }}
+        />
+      );
     }
     if (state === "REVEAL" && data) {
-      return data.secretBoxData.url;
+      return (
+        <>
+          <rect
+            width="100%"
+            height="100%"
+            fill={"#FFF"}
+            filter={`url(#distort)`}
+          />
+          <image
+            x="10%"
+            y="10%"
+            width="80%"
+            height="80%"
+            filter="url(#distort)"
+            xlinkHref={data.secretBoxData.url}
+            style={{
+              objectFit: "scale-down",
+              backgroundColor: data.bg,
+            }}
+          />
+        </>
+      );
     } else {
       return undefined;
     }
@@ -126,6 +159,7 @@ const CenterCard: React.FC<{ onClose: (id: string) => void }> = ({
         left: openingBox.left,
         transition: "all 1s ease",
         backgroundColor: data.bg,
+        transformStyle: "preserve-3d",
       }}
     >
       <svg
@@ -229,17 +263,7 @@ const CenterCard: React.FC<{ onClose: (id: string) => void }> = ({
             <feDisplacementMap in2="goo" in="final" scale="20" />
           </filter>
         </defs>
-        <image
-          x="0"
-          y="0"
-          filter="url(#distort)"
-          width="100%"
-          height="100%"
-          xlinkHref={imgUrl}
-          style={{
-            objectFit: "scale-down",
-          }}
-        />
+        {imageTag}
       </svg>
     </div>
   );
