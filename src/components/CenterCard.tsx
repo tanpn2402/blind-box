@@ -124,20 +124,23 @@ const CenterCard: React.FC<{ onClose: (id: string) => void }> = ({
           delay: 2,
         });
 
+        // Open Effect
+        const openDelayTime = 2;
+        const openDuration = 3;
         gsap.to("#goo", {
           attr: {
             values: "1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -15",
           },
-          duration: 2,
+          duration: openDuration,
           ease: "none",
           repeat: 1,
           yoyo: true,
-          delay: 2,
+          delay: openDelayTime,
         });
 
         setTimeout(() => {
           setState("REVEAL");
-        }, 3500);
+        }, (openDelayTime + openDuration) * 1000);
       }
     },
     { scope: svgRef, dependencies: [openingBox] }

@@ -6,7 +6,7 @@ import {
   TActiveBlindBoxData,
   TBlindBoxData,
 } from "./context/BlindBoxContext";
-import { shuffle } from "lodash";
+import { shuffle, uniqBy } from "lodash";
 import { Card } from "./components/Card";
 import { CenterCard } from "./components/CenterCard";
 import { useQuery } from "@tanstack/react-query";
@@ -58,6 +58,17 @@ function App() {
           secretBoxNumber = shuffle(giftData);
           localStorage.setItem("SECRET_BOX", JSON.stringify(secretBoxNumber));
         }
+
+        // Preload images
+        const imageUrls = uniqBy(secretBoxNumber, "url").map((el) => el.url);
+        imageUrls.forEach((image) => {
+          if (image) {
+            const newImage = new Image();
+            newImage.src = image;
+            // @ts-expect-error Property 'image' does not exist on type 'Window & typeof globalThis'
+            window[image] = newImage;
+          }
+        });
         return boxNumber.map((index) => {
           return {
             ...boxData[index],
@@ -91,14 +102,10 @@ function App() {
     }
   }, []);
 
-  const handleBoxClosed = useCallback(
-    (id: string) => {
-      setOpenBoxes((prevOpenedBox) => [...prevOpenedBox, id]);
-      setOpeningBox(undefined);
-      setStatus("NONE");
-    },
-    [setStatus, setOpenBoxes, setOpeningBox]
-  );
+  const handleBoxClosed = useCallback(() => {
+    setOpeningBox(undefined);
+    setStatus("NONE");
+  }, [setStatus, setOpeningBox]);
 
   const handleClick = useCallback(
     (ev: MouseEvent) => {
@@ -118,12 +125,22 @@ function App() {
                 target.getBoundingClientRect();
               setStatus("OPENING");
               setOpeningBox({ width, height, top, left, id });
+              setOpenBoxes((prevOpenedBox) => [...prevOpenedBox, id]);
             }
           }
         }
       }
     },
     [openingBox, status]
+  );
+
+  const handleKeyDown = useCallback(
+    (ev: KeyboardEvent) => {
+      if (ev.key === "Escape" && status === "NONE") {
+        setStatus("CLOSING");
+      }
+    },
+    [setStatus, status]
   );
 
   useEffect(() => {
@@ -140,10 +157,12 @@ function App() {
 
   useEffect(() => {
     document.body.addEventListener("click", handleClick);
+    document.body.addEventListener("keydown", handleKeyDown);
     return () => {
       document.body.removeEventListener("click", handleClick);
+      document.body.removeEventListener("keydown", handleKeyDown);
     };
-  }, [handleClick, openingBox, status]);
+  }, [handleClick, handleKeyDown, openingBox, status]);
 
   return (
     <BlindBoxContext.Provider

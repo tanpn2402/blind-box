@@ -19,11 +19,11 @@ const Card: React.FC<{
   const [rotation, setRotation] = useState({ x: 0, y: 0 });
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
 
-  const { getDataById, openedBoxes, status } = useBlindBox();
+  const { getDataById, openedBoxes, status, openingBox } = useBlindBox();
   const data = useMemo(() => getDataById(boxId), [getDataById, boxId]);
   const isOpened = useMemo(
-    () => openedBoxes.includes(boxId),
-    [openedBoxes, boxId]
+    () => openingBox?.id !== boxId && openedBoxes.includes(boxId),
+    [openedBoxes, openingBox, boxId]
   );
 
   const handleMouseMove = useCallback(
@@ -53,7 +53,7 @@ const Card: React.FC<{
       if (isOpened) {
         gsap.to("#gaa", {
           attr: {
-            values: "1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -15",
+            values: "1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 1",
           },
           duration: 1,
           ease: "none",
